@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kisan Sarthi</title>
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://placehold.co/192x192/10B981/ffffff?text=KS">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7fbf8;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.08);
+            padding: 2rem;
+        }
+        .btn-primary {
+            background-color: #10B981;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #059669;
+        }
+        .btn-secondary {
+            background-color: #E5E7EB;
+            color: #4B5563;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #D1D5DB;
+        }
+        .input-field {
+            border: 2px solid #D1D5DB;
+            border-radius: 0.75rem;
+            padding: 0.75rem;
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: #10B981;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 flex flex-col items-center p-4 min-h-screen">
+
+    <!-- Modal for Messages -->
+    <div id="message-modal" class="modal">
+        <div class="bg-white p-8 rounded-2xl shadow-lg w-11/12 md:w-1/3 text-center">
+            <h3 id="modal-title" class="text-xl font-bold mb-4 text-gray-800"></h3>
+            <p id="modal-message" class="text-gray-600 mb-6"></p>
+            <button onclick="document.getElementById('message-modal').style.display='none'" class="btn-primary">OK</button>
+        </div>
+    </div>
+
+    <!-- Main App Container -->
+    <div class="w-full max-w-4xl space-y-8">
+
+        <!-- Header -->
+        <header class="text-center">
+            <h1 class="text-4xl font-bold text-green-700" data-translate="app_name">Kisan Sarthi</h1>
+            <p class="mt-2 text-gray-600" data-translate="app_slogan">A helping hand for every farmer.</p>
+        </header>
+
+        <!-- Voice Assistant & Language Selector -->
+        <div class="card flex flex-col sm:flex-row justify-between items-center space-y-4 sm:space-y-0 sm:space-x-4">
+            <div class="flex-grow">
+                <button id="voice-assistant-btn" class="w-full btn-primary flex items-center justify-center">
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <span data-translate="talk_to_assistant">Talk to Assistant</span>
+                </button>
+            </div>
+            <div class="flex-grow">
+                <select id="language-selector" class="input-field w-full">
+                    <option value="en-US">English</option>
+                    <option value="hi-IN">Hindi</option>
+                    <option value="pa-IN">Punjabi</option>
+                    <option value="mr-IN">Marathi</option>
+                    <option value="gu-IN">Gujarati</option>
+                    <option value="bn-BD">Bengali</option>
+                    <option value="ta-IN">Tamil</option>
+                    <option value="te-IN">Telugu</option>
+                    <option value="kn-IN">Kannada</option>
+                    <option value="ml-IN">Malayalam</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Location & Land Size Input -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-green-600 mb-4" data-translate="location_and_land_details_title">Location & Land Details</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="location" class="block text-gray-700 font-medium" data-translate="location_label">Location</label>
+                    <input type="text" id="location" placeholder="Enter your city or village" data-translate-placeholder="location_placeholder" class="mt-1 input-field">
+                </div>
+                <div>
+                    <label for="land-size" class="block text-gray-700 font-medium" data-translate="land_size_label">Land Size (in acres)</label>
+                    <input type="number" id="land-size" placeholder="e.g., 5" data-translate-placeholder="land_size_placeholder" class="mt-1 input-field">
+                </div>
+                <button id="get-recommendations-btn" class="w-full btn-primary" data-translate="get_recommendations_btn">Get Recommendations</button>
+            </div>
+        </div>
+
+        <!-- Recommendations & Alerts Section -->
+        <div id="recommendations-section" class="card hidden">
+            <h2 class="text-2xl font-semibold text-green-600 mb-4" data-translate="recommendations_and_alerts_title">Recommendations & Alerts</h2>
+            <div class="space-y-4">
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800" data-translate="crop_suggestions_title">Ideal Crop Suggestions:</h3>
+                    <p id="crop-suggestions" class="text-gray-600" data-translate="loading">Loading...</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800" data-translate="weather_climate_title">Weather & Climate:</h3>
+                    <p id="weather-info" class="text-gray-600" data-translate="loading">Loading...</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-gray-800" data-translate="irrigation_pest_title">Irrigation & Pest Control:</h3>
+                    <p id="irrigation-pest" class="text-gray-600" data-translate="loading">Loading...</p>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-red-500" data-translate="urgent_alerts_title">Urgent Alerts:</h3>
+                    <p id="alerts-info" class="text-red-500 font-medium" data-translate="loading">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Crop Disease Detection -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-green-600 mb-4" data-translate="ai_disease_detection_title">AI Crop Disease Detection</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="crop-image" class="block text-gray-700 font-medium" data-translate="upload_image_label">Upload a picture of your crop</label>
+                    <input type="file" id="crop-image" accept="image/*" class="mt-1 input-field" required>
+                    <p id="image-preview" class="mt-4 text-center"></p>
+                </div>
+                <button id="analyze-image-btn" class="w-full btn-primary" data-translate="analyze_image_btn">Analyze Image</button>
+                <div id="disease-analysis-results" class="mt-4 p-4 rounded-xl bg-gray-100 hidden">
+                    <p id="disease-result" class="text-gray-700"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yield Prediction -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-green-600 mb-4" data-translate="yield_prediction_title">Expected Yield Prediction</h2>
+            <p id="yield-prediction-info" class="text-gray-600" data-translate="yield_prediction_info">
+                Enter your crop, soil type, and location to get a yield prediction.
+            </p>
+            <button id="predict-yield-btn" class="w-full btn-primary mt-4" data-translate="predict_yield_btn">Predict Yield</button>
+            <div id="yield-results" class="mt-4 p-4 rounded-xl bg-gray-100 hidden">
+                <p id="yield-result" class="text-gray-700"></p>
+            </div>
+        </div>
+
+        <!-- Market Linkage -->
+        <div class="card">
+            <h2 class="text-2xl font-semibold text-green-600 mb-4" data-translate="market_linkage_title">Market Linkage</h2>
+            <p class="text-gray-600" data-translate="market_linkage_info">
+                Get real-time prices for your produce. Prices are for illustrative purposes and would be fetched from a live API.
+            </p>
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-left table-auto border-collapse">
+                    <thead>
+                        <tr class="bg-green-100 text-green-800">
+                            <th class="p-4 rounded-l-xl" data-translate="commodity_table_header">Commodity</th>
+                            <th class="p-4" data-translate="price_table_header">Price (per quintal)</th>
+                            <th class="p-4 rounded-r-xl" data-translate="last_updated_table_header">Last Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="p-4 border-b border-gray-200" data-translate="wheat_row">Wheat</td>
+                            <td class="p-4 border-b border-gray-200">₹ 2,275</td>
+                            <td class="p-4 border-b border-gray-200">10:30 AM</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 border-b border-gray-200" data-translate="rice_row">Rice (Basmati)</td>
+                            <td class="p-4 border-b border-gray-200">₹ 8,500</td>
+                            <td class="p-4 border-b border-gray-200">09:45 AM</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4 border-b border-gray-200" data-translate="maize_row">Maize</td>
+                            <td class="p-4 border-b border-gray-200">₹ 2,090</td>
+                            <td class="p-4 border-b border-gray-200">10:15 AM</td>
+                        </tr>
+                        <tr>
+                            <td class="p-4" data-translate="soybean_row">Soybean</td>
+                            <td class="p-4">₹ 5,200</td>
+                            <td class="p-4">09:00 AM</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript for app functionality -->
+    <script>
+        // UI Element Selectors
+        const locationInput = document.getElementById('location');
+        const landSizeInput = document.getElementById('land-size');
+        const getRecommendationsBtn = document.getElementById('get-recommendations-btn');
+        const recommendationsSection = document.getElementById('recommendations-section');
+        const cropSuggestionsEl = document.getElementById('crop-suggestions');
+        const weatherInfoEl = document.getElementById('weather-info');
+        const irrigationPestEl = document.getElementById('irrigation-pest');
+        const alertsInfoEl = document.getElementById('alerts-info');
+        const cropImageInput = document.getElementById('crop-image');
+        const analyzeImageBtn = document.getElementById('analyze-image-btn');
+        const diseaseAnalysisResultsEl = document.getElementById('disease-analysis-results');
+        const diseaseResultEl = document.getElementById('disease-result');
+        const predictYieldBtn = document.getElementById('predict-yield-btn');
+        const yieldResultsEl = document.getElementById('yield-results');
+        const yieldResultEl = document.getElementById('yield-result');
+        const imagePreviewEl = document.getElementById('image-preview');
+        const voiceAssistantBtn = document.getElementById('voice-assistant-btn');
+        const languageSelector = document.getElementById('language-selector');
+
+        // Translation data object
+        const translations = {
+            'en-US': {
+                app_name: "Kisan Sarthi",
+                app_slogan: "A helping hand for every farmer.",
+                talk_to_assistant: "Talk to Assistant",
+                location_and_land_details_title: "Location & Land Details",
+                location_label: "Location",
+                location_placeholder: "Enter your city or village",
+                land_size_label: "Land Size (in acres)",
+                land_size_placeholder: "e.g., 5",
+                get_recommendations_btn: "Get Recommendations",
+                recommendations_and_alerts_title: "Recommendations & Alerts",
+                crop_suggestions_title: "Ideal Crop Suggestions:",
+                weather_climate_title: "Weather & Climate:",
+                irrigation_pest_title: "Irrigation & Pest Control:",
+                urgent_alerts_title: "Urgent Alerts:",
+                ai_disease_detection_title: "AI Crop Disease Detection",
+                upload_image_label: "Upload a picture of your crop",
+                analyze_image_btn: "Analyze Image",
+                yield_prediction_title: "Expected Yield Prediction",
+                yield_prediction_info: "Enter your crop, soil type, and location to get a yield prediction.",
+                predict_yield_btn: "Predict Yield",
+                market_linkage_title: "Market Linkage",
+                market_linkage_info: "Get real-time prices for your produce. Prices are for illustrative purposes and would be fetched from a live API.",
+                commodity_table_header: "Commodity",
+                price_table_header: "Price (per quintal)",
+                last_updated_table_header: "Last Updated",
+                wheat_row: "Wheat",
+                rice_row: "Rice (Basmati)",
+                maize_row: "Maize",
+                soybean_row: "Soybean",
+                loading: "Loading...",
+                modal_incomplete_info: "Incomplete Information",
+                modal_enter_both: "Please enter both your location and land size.",
+                modal_image_missing: "Image Missing",
+                modal_upload_image: "Please upload a crop image to analyze.",
+                modal_analysis_loading: "Analyzing image... Please wait.",
+                modal_analysis_error: "Could not analyze the image. Please try again.",
+                modal_api_error: "Error analyzing image. Please try again.",
+                modal_assistant_welcome: "Welcome to Kisan Sarthi! I can help you with crop suggestions, weather information, and more.",
+                modal_audio_error: "Could not generate audio.",
+                modal_tts_api_error: "Failed to connect to the voice assistant. Please try again."
+            },
+            'hi-IN': {
+                app_name: "किसान सारथी",
+                app_slogan: "हर किसान के लिए एक मददगार हाथ।",
+                talk_to_assistant: "सहायक से बात करें",
+                location_and_land_details_title: "स्थान और भूमि का विवरण",
+                location_label: "स्थान",
+                location_placeholder: "अपना शहर या गांव दर्ज करें",
+                land_size_label: "भूमि का आकार (एकड़ में)",
+                land_size_placeholder: "उदाहरण: 5",
+                get_recommendations_btn: "सिफारिशें प्राप्त करें",
+                recommendations_and_alerts_title: "सिफारिशें और अलर्ट",
+                crop_suggestions_title: "आदर्श फसल सुझाव:",
+                weather_climate_title: "मौसम और जलवायु:",
+                irrigation_pest_title: "सिंचाई और कीट नियंत्रण:",
+                urgent_alerts_title: "तत्काल अलर्ट:",
+                ai_disease_detection_title: "एआई फसल रोग का पता लगाना",
+                upload_image_label: "अपनी फसल का एक चित्र अपलोड करें",
+                analyze_image_btn: "छवि का विश्लेषण करें",
+                yield_prediction_title: "अपेक्षित उपज का पूर्वानुमान",
+                yield_prediction_info: "उपज का पूर्वानुमान प्राप्त करने के लिए अपनी फसल, मिट्टी का प्रकार और स्थान दर्ज करें।",
+                predict_yield_btn: "उपज का पूर्वानुमान करें",
+                market_linkage_title: "बाजार संपर्क",
+                market_linkage_info: "अपनी उपज के लिए वास्तविक समय की कीमतें प्राप्त करें। कीमतें केवल उदाहरण के लिए हैं।",
+                commodity_table_header: "वस्तु",
+                price_table_header: "मूल्य (प्रति क्विंटल)",
+                last_updated_table_header: "अंतिम अद्यतन",
+                wheat_row: "गेहूँ",
+                rice_row: "चावल (बासमती)",
+                maize_row: "मक्का",
+                soybean_row: "सोयाबीन",
+                loading: "लोड हो रहा है...",
+                modal_incomplete_info: "अपूर्ण जानकारी",
+                modal_enter_both: "कृपया अपना स्थान और भूमि का आकार दोनों दर्ज करें।",
+                modal_image_missing: "छवि गुम है",
+                modal_upload_image: "विश्लेषण के लिए कृपया एक फसल की छवि अपलोड करें।",
+                modal_analysis_loading: "छवि का विश्लेषण हो रहा है... कृपया प्रतीक्षा करें।",
+                modal_analysis_error: "छवि का विश्लेषण नहीं हो सका। कृपया पुनः प्रयास करें।",
+                modal_api_error: "छवि का विश्लेषण करते समय त्रुटि। कृपया पुनः प्रयास करें।",
+                modal_assistant_welcome: "किसान सारथी में आपका स्वागत है! मैं आपको फसल के सुझाव, मौसम की जानकारी और बहुत कुछ में मदद कर सकता हूं।",
+                modal_audio_error: "ऑडियो उत्पन्न नहीं हो सका।",
+                modal_tts_api_error: "वॉयस असिस्टेंट से कनेक्ट करने में विफल। कृपया पुनः प्रयास करें।"
+            },
+            'pa-IN': {
+                app_name: "ਕਿਸਾਨ ਸਾਰਥੀ",
+                app_slogan: "ਹਰ ਕਿਸਾਨ ਲਈ ਮਦਦਗਾਰ ਹੱਥ।",
+                talk_to_assistant: "ਸਹਾਇਕ ਨਾਲ ਗੱਲ ਕਰੋ",
+                location_and_land_details_title: "ਸਥਾਨ ਅਤੇ ਜ਼ਮੀਨ ਦਾ ਵੇਰਵਾ",
+                location_label: "ਸਥਾਨ",
+                location_placeholder: "ਆਪਣਾ ਸ਼ਹਿਰ ਜਾਂ ਪਿੰਡ ਦਾਖਲ ਕਰੋ",
+                land_size_label: "ਜ਼ਮੀਨ ਦਾ ਆਕਾਰ (ਏਕੜ ਵਿੱਚ)",
+                land_size_placeholder: "ਉਦਾਹਰਨ ਲਈ: 5",
+                get_recommendations_btn: "ਸਿਫ਼ਾਰਸ਼ਾਂ ਪ੍ਰਾਪਤ ਕਰੋ",
+                recommendations_and_alerts_title: "ਸਿਫ਼ਾਰਸ਼ਾਂ ਅਤੇ ਚੇਤਾਵਨੀਆਂ",
+                crop_suggestions_title: "ਆਦਰਸ਼ ਫ਼ਸਲ ਸੁਝਾਅ:",
+                weather_climate_title: "ਮੌਸਮ ਅਤੇ ਜਲਵਾਯੂ:",
+                irrigation_pest_title: "ਸਿੰਚਾਈ ਅਤੇ ਕੀਟ ਕੰਟਰੋਲ:",
+                urgent_alerts_title: "ਜ਼ਰੂਰੀ ਚੇਤਾਵਨੀਆਂ:",
+                ai_disease_detection_title: "ਏ.ਆਈ. ਫ਼ਸਲ ਰੋਗ ਖੋਜ",
+                upload_image_label: "ਆਪਣੀ ਫ਼ਸਲ ਦੀ ਤਸਵੀਰ ਅੱਪਲੋਡ ਕਰੋ",
+                analyze_image_btn: "ਚਿੱਤਰ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰੋ",
+                yield_prediction_title: "ਉਮੀਦ ਕੀਤੀ ਉਪਜ ਦਾ ਅਨੁਮਾਨ",
+                yield_prediction_info: "ਉਪਜ ਦਾ ਅਨੁਮਾਨ ਪ੍ਰਾਪਤ ਕਰਨ ਲਈ ਆਪਣੀ ਫ਼ਸਲ, ਮਿੱਟੀ ਦੀ ਕਿਸਮ, ਅਤੇ ਸਥਾਨ ਦਾਖਲ ਕਰੋ।",
+                predict_yield_btn: "ਉਪਜ ਦਾ ਅਨੁਮਾਨ ਕਰੋ",
+                market_linkage_title: "ਮਾਰਕੀਟ ਲਿੰਕੇਜ",
+                market_linkage_info: "ਆਪਣੀ ਉਪਜ ਲਈ ਰੀਅਲ-ਟਾਈਮ ਕੀਮਤਾਂ ਪ੍ਰਾਪਤ ਕਰੋ। ਕੀਮਤਾਂ ਸਿਰਫ ਉਦਾਹਰਣਾਂ ਲਈ ਹਨ।",
+                commodity_table_header: "ਵਸਤੂ",
+                price_table_header: "ਕੀਮਤ (ਪ੍ਰਤੀ ਕੁਇੰਟਲ)",
+                last_updated_table_header: "ਆਖਰੀ ਅੱਪਡੇਟ",
+                wheat_row: "ਕਣਕ",
+                rice_row: "ਚੌਲ (ਬਾਸਮਤੀ)",
+                maize_row: "ਮੱਕੀ",
+                soybean_row: "ਸੋਇਆਬੀਨ",
+                loading: "ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...",
+                modal_incomplete_info: "ਅਧੂਰੀ ਜਾਣਕਾਰੀ",
+                modal_enter_both: "ਕਿਰਪਾ ਕਰਕੇ ਆਪਣਾ ਸਥਾਨ ਅਤੇ ਜ਼ਮੀਨ ਦਾ ਆਕਾਰ ਦੋਵੇਂ ਦਾਖਲ ਕਰੋ।",
+                modal_image_missing: "ਚਿੱਤਰ ਗੁੰਮ ਹੈ",
+                modal_upload_image: "ਵਿਸ਼ਲੇਸ਼ਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਇੱਕ ਫ਼ਸਲ ਚਿੱਤਰ ਅੱਪਲੋਡ ਕਰੋ।",
+                modal_analysis_loading: "ਚਿੱਤਰ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕੀਤਾ ਜਾ ਰਿਹਾ ਹੈ... ਕਿਰਪਾ ਕਰਕੇ ਉਡੀਕ ਕਰੋ।",
+                modal_analysis_error: "ਚਿੱਤਰ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+                modal_api_error: "ਚਿੱਤਰ ਦਾ ਵਿਸ਼ਲੇਸ਼ਣ ਕਰਨ ਵਿੱਚ ਗਲਤੀ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।",
+                modal_assistant_welcome: "ਕਿਸਾਨ ਸਾਰਥੀ ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ! ਮੈਂ ਤੁਹਾਨੂੰ ਫ਼ਸਲ ਦੇ ਸੁਝਾਵਾਂ, ਮੌਸਮ ਦੀ ਜਾਣਕਾਰੀ ਅਤੇ ਹੋਰ ਬਹੁਤ ਕੁਝ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦਾ ਹਾਂ।",
+                modal_audio_error: "ਆਡੀਓ ਤਿਆਰ ਨਹੀਂ ਕੀਤਾ ਜਾ ਸਕਿਆ।",
+                modal_tts_api_error: "ਵੌਇਸ ਅਸਿਸਟੈਂਟ ਨਾਲ ਕਨੈਕਟ ਕਰਨ ਵਿੱਚ ਅਸਫਲ। ਕਿਰਪਾ ਕਰਕੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
+            },
+            'mr-IN': {
+                app_name: "किसान सारथी",
+                app_slogan: "प्रत्येक शेतकऱ्यासाठी एक मदतगार हात.",
+                talk_to_assistant: "सहायकाशी बोला",
+                location_and_land_details_title: "स्थान आणि जमिनीचा तपशील",
+                location_label: "स्थान",
+                location_placeholder: "आपले शहर किंवा गाव प्रविष्ट करा",
+                land_size_label: "जमिनीचा आकार (एकरमध्ये)",
+                land_size_placeholder: "उदा. 5",
+                get_recommendations_btn: "शिफारसी मिळवा",
+                recommendations_and_alerts_title: "शिफारसी आणि सूचना",
+                crop_suggestions_title: "आदर्श पिकांचे सुझाव:",
+                weather_climate_title: "हवामान आणि वातावरण:",
+                irrigation_pest_title: "सिंचन आणि कीटक नियंत्रण:",
+                urgent_alerts_title: "तातडीच्या सूचना:",
+                ai_disease_detection_title: "एआय पीक रोग ओळख",
+                upload_image_label: "आपल्या पिकाचे चित्र अपलोड करा",
+                analyze_image_btn: "प्रतिमेचे विश्लेषण करा",
+                yield_prediction_title: "अपेक्षित उत्पन्नाचा अंदाज",
+                yield_prediction_info: "उत्पन्नाचा अंदाज मिळवण्यासाठी आपले पीक, मातीचा प्रकार आणि स्थान प्रविष्ट करा.",
+                predict_yield_btn: "उत्पन्नाचा अंदाज करा",
+                market_linkage_title: "बाजार जोडणी",
+                market_linkage_info: "आपल्या उत्पादनासाठी वास्तविक-वेळ दर मिळवा. किंमती केवळ उदाहरणासाठी आहेत.",
+                commodity_table_header: "वस्तू",
+                price_table_header: "दर (प्रति क्विंटल)",
+                last_updated_table_header: "अंतिम अद्यतन",
+                wheat_row: "गहू",
+                rice_row: "तांदूळ (बासमती)",
+                maize_row: "मका",
+                soybean_row: "सोयाबीन",
+                loading: "लोड होत आहे...",
+                modal_incomplete_info: "अपूर्ण माहिती",
+                modal_enter_both: "कृपया आपले स्थान आणि जमिनीचा आकार दोन्ही प्रविष्ट करा.",
+                modal_image_missing: "प्रतिमा गहाळ आहे",
+                modal_upload_image: "विश्लेषणासाठी कृपया एक पिकाची प्रतिमा अपलोड करा.",
+                modal_analysis_loading: "प्रतिमेचे विश्लेषण होत आहे... कृपया प्रतीक्षा करा.",
+                modal_analysis_error: "प्रतिमेचे विश्लेषण होऊ शकले नाही. कृपया पुन्हा प्रयत्न करा.",
+                modal_api_error: "प्रतिमेचे विश्लेषण करताना त्रुटी. कृपया पुन्हा प्रयत्न करा.",
+                modal_assistant_welcome: "किसान सारथीमध्ये आपले स्वागत आहे! मी आपल्याला पिकांचे सुझाव, हवामानाची माहिती आणि बरेच काही मध्ये मदत करू शकतो.",
+                modal_audio_error: "ऑडिओ तयार होऊ शकला नाही.",
+                modal_tts_api_error: "व्हॉइस असिस्टंटशी कनेक्ट होण्यात अयशस्वी. कृपया पुन्हा प्रयत्न करा।"
+            },
+            'gu-IN': {
+                app_name: "કિસાન સારથી",
+                app_slogan: "દરેક ખેડૂત માટે એક મદદગાર હાથ.",
+                talk_to_assistant: "સહાયક સાથે વાત કરો",
+                location_and_land_details_title: "સ્થાન અને જમીનની વિગતો",
+                location_label: "સ્થાન",
+                location_placeholder: "તમારું શહેર અથવા ગામ દાખલ કરો",
+                land_size_label: "જમીનનું કદ (એકર માં)",
+                land_size_placeholder: "દા.ત. 5",
+                get_recommendations_btn: "ભલામણો મેળવો",
+                recommendations_and_alerts_title: "ભલામણો અને ચેતવણીઓ",
+                crop_suggestions_title: "આદર્શ પાક સૂચનો:",
+                weather_climate_title: "હવામાન અને આબોહવા:",
+                irrigation_pest_title: "સિંચાઈ અને જંતુ નિયંત્રણ:",
+                urgent_alerts_title: "તાત્કાલિક ચેતવણીઓ:",
+                ai_disease_detection_title: "એઆઈ પાક રોગ શોધ",
+                upload_image_label: "તમારા પાકનું ચિત્ર અપલોડ કરો",
+                analyze_image_btn: "ચિત્રનું વિશ્લેષણ કરો",
+                yield_prediction_title: "અપેક્ષિત ઉપજનું અનુમાન",
+                yield_prediction_info: "ઉપજનું અનુમાન મેળવવા માટે તમારો પાક, માટીનો પ્રકાર અને સ્થાન દાખલ કરો.",
+                predict_yield_btn: "ઉપજનું અનુમાન કરો",
+                market_linkage_title: "બજાર જોડાણ",
+                market_linkage_info: "તમારી ઉપજ માટે વાસ્તવિક-સમયના ભાવ મેળવો. ભાવ ફક્ત ઉદાહરણ માટે છે.",
+                commodity_table_header: "વસ્તુ",
+                price_table_header: "ભાવ (પ્રતિ ક્વિન્ટલ)",
+                last_updated_table_header: "છેલ્લું અપડેટ",
+                wheat_row: "ઘઉં",
+                rice_row: "ચોખા (બાસમતી)",
+                maize_row: "મકાઈ",
+                soybean_row: "સોયાબીન",
+                loading: "લોડ થઈ રહ્યું છે...",
+                modal_incomplete_info: "અધૂરી માહિતી",
+                modal_enter_both: "કૃપા કરીને તમારું સ્થાન અને જમીનનું કદ બંને દાખલ કરો.",
+                modal_image_missing: "ચિત્ર ગુમ છે",
+                modal_upload_image: "વિશ્લેષણ માટે કૃપા કરીને એક પાક ચિત્ર અપલોડ કરો.",
+                modal_analysis_loading: "ચિત્રનું વિશ્લેષણ થઈ રહ્યું છે... કૃપા કરીને રાહ જુઓ.",
+                modal_analysis_error: "ચિત્રનું વિશ્લેષણ થઈ શક્યું નથી. કૃપા કરીને ફરી પ્રયાસ કરો.",
+                modal_api_error: "ચિત્રનું વિશ્લેષણ કરવામાં ભૂલ. કૃપા કરીને ફરી પ્રયાસ કરો.",
+                modal_assistant_welcome: "કિસાન સારથીમાં તમારું સ્વાગત છે! હું તમને પાકના સૂચનો, હવામાન માહિતી અને વધુમાં મદદ કરી શકું છું.",
+                modal_audio_error: "ઑડિયો જનરેટ થઈ શક્યો નથી.",
+                modal_tts_api_error: "વૉઇસ સહાયક સાથે કનેક્ટ કરવામાં નિષ્ફળ. કૃપા કરીને ફરી પ્રયાસ કરો."
+            },
+            'bn-BD': {
+                app_name: "কিসান সারথি",
+                app_slogan: "প্রত্যেক কৃষকের জন্য একটি সহায়ক হাত।",
+                talk_to_assistant: "সহকারীর সাথে কথা বলুন",
+                location_and_land_details_title: "অবস্থান এবং জমির বিবরণ",
+                location_label: "অবস্থান",
+                location_placeholder: "আপনার শহর বা গ্রাম লিখুন",
+                land_size_label: "জমির আকার (একর)",
+                land_size_placeholder: "যেমন: 5",
+                get_recommendations_btn: "সুপারিশ পান",
+                recommendations_and_alerts_title: "সুপারিশ এবং সতর্কতা",
+                crop_suggestions_title: "আদর্শ ফসলের পরামর্শ:",
+                weather_climate_title: "আবহাওয়া এবং জলবায়ু:",
+                irrigation_pest_title: "সেচ এবং কীটপতঙ্গ নিয়ন্ত্রণ:",
+                urgent_alerts_title: "জরুরী সতর্কতা:",
+                ai_disease_detection_title: "এআই শস্য রোগ সনাক্তকরণ",
+                upload_image_label: "আপনার ফসলের একটি ছবি আপলোড করুন",
+                analyze_image_btn: "ছবি বিশ্লেষণ করুন",
+                yield_prediction_title: "প্রত্যাশিত ফলনের পূর্বাভাস",
+                yield_prediction_info: "ফলনের পূর্বাভাস পেতে আপনার ফসল, মাটির ধরন এবং অবস্থান লিখুন।",
+                predict_yield_btn: "ফলনের পূর্বাভাস দিন",
+                market_linkage_title: "বাজার সংযোগ",
+                market_linkage_info: "আপনার পণ্যের জন্য রিয়েল-টাইম মূল্য পান। মূল্য শুধুমাত্র উদাহরণের জন্য।",
+                commodity_table_header: "পণ্য",
+                price_table_header: "মূল্য (প্রতি কুইন্টাল)",
+                last_updated_table_header: "শেষ আপডেট",
+                wheat_row: "গম",
+                rice_row: "চাল (বাসমতি)",
+                maize_row: "ভুট্টা",
+                soybean_row: "সয়াবিন",
+                loading: "লোড হচ্ছে...",
+                modal_incomplete_info: "অসম্পূর্ণ তথ্য",
+                modal_enter_both: "অনুগ্রহ করে আপনার অবস্থান এবং জমির আকার উভয়ই লিখুন।",
+                modal_image_missing: "ছবি নেই",
+                modal_upload_image: "বিশ্লেষণের জন্য অনুগ্রহ করে একটি ফসলের ছবি আপলোড করুন।",
+                modal_analysis_loading: "ছবি বিশ্লেষণ করা হচ্ছে... অনুগ্রহ করে অপেক্ষা করুন।",
+                modal_analysis_error: "ছবি বিশ্লেষণ করা যায়নি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+                modal_api_error: "ছবি বিশ্লেষণ করার সময় ত্রুটি। অনুগ্রহ করে আবার চেষ্টা করুন।",
+                modal_assistant_welcome: "কিসান সারথিতে আপনাকে স্বাগতম! আমি আপনাকে ফসলের পরামর্শ, আবহাওয়ার তথ্য এবং আরও অনেক কিছুতে সাহায্য করতে পারি।",
+                modal_audio_error: "অডিও তৈরি করা যায়নি।",
+                modal_tts_api_error: "ভয়েস সহকারীর সাথে সংযোগ ব্যর্থ হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।"
+            },
+            'ta-IN': {
+                app_name: "கிசான் சாரதி",
+                app_slogan: "ஒவ்வொரு விவசாயிக்கும் ஒரு உதவிக் கரம்.",
+                talk_to_assistant: "உதவியாளரிடம் பேசுங்கள்",
+                location_and_land_details_title: "இருப்பிடம் மற்றும் நில விவரங்கள்",
+                location_label: "இருப்பிடம்",
+                location_placeholder: "உங்கள் நகரம் அல்லது கிராமத்தை உள்ளிடவும்",
+                land_size_label: "நிலத்தின் அளவு (ஏக்கரில்)",
+                land_size_placeholder: "எ.கா. 5",
+                get_recommendations_btn: "பரிந்துரைகளைப் பெறுங்கள்",
+                recommendations_and_alerts_title: "பரிந்துரைகள் மற்றும் எச்சரிக்கைகள்",
+                crop_suggestions_title: "சிறந்த பயிர் பரிந்துரைகள்:",
+                weather_climate_title: "வானிலை மற்றும் காலநிலை:",
+                irrigation_pest_title: "நீர்ப்பாசனம் மற்றும் பூச்சி கட்டுப்பாடு:",
+                urgent_alerts_title: "அவசர எச்சரிக்கைகள்:",
+                ai_disease_detection_title: "AI பயிர் நோய் கண்டறிதல்",
+                upload_image_label: "உங்கள் பயிரின் படத்தை பதிவேற்றவும்",
+                analyze_image_btn: "படத்தை பகுப்பாய்வு செய்யுங்கள்",
+                yield_prediction_title: "எதிர்பார்க்கப்படும் விளைச்சல் கணிப்பு",
+                yield_prediction_info: "விளைச்சல் கணிப்பைப் பெற உங்கள் பயிர், மண் வகை மற்றும் இருப்பிடத்தை உள்ளிடவும்.",
+                predict_yield_btn: "விளைச்சலைக் கணிக்கவும்",
+                market_linkage_title: "சந்தை இணைப்பு",
+                market_linkage_info: "உங்கள் விளைச்சலுக்கான உண்மையான நேர விலைகளைப் பெறுங்கள். விலைகள் வெறும் உதாரணத்திற்காக மட்டுமே.",
+                commodity_table_header: "பொருள்",
+                price_table_header: "விலை (ஒரு குவிண்டாலுக்கு)",
+                last_updated_table_header: "கடைசியாக புதுப்பிக்கப்பட்டது",
+                wheat_row: "கோதுமை",
+                rice_row: "அரிசி (பாசுமதி)",
+                maize_row: "மக்காச்சோளம்",
+                soybean_row: "சோயாபீன்",
+                loading: "ஏற்றப்படுகிறது...",
+                modal_incomplete_info: "முழுமையற்ற தகவல்",
+                modal_enter_both: "தயவுசெய்து உங்கள் இருப்பிடம் மற்றும் நிலத்தின் அளவு இரண்டையும் உள்ளிடவும்.",
+                modal_image_missing: "படம் இல்லை",
+                modal_upload_image: "பகுப்பாய்வு செய்ய ஒரு பயிர் படத்தை பதிவேற்றவும்.",
+                modal_analysis_loading: "படம் பகுப்பாய்வு செய்யப்படுகிறது... தயவுசெய்து காத்திருக்கவும்.",
+                modal_analysis_error: "படத்தை பகுப்பாய்வு செய்ய முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.",
+                modal_api_error: "படத்தை பகுப்பாய்வு செய்வதில் பிழை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.",
+                modal_assistant_welcome: "கிசான் சாரதிக்கு வரவேற்கிறோம்! பயிர் பரிந்துரைகள், வானிலை தகவல் மற்றும் பலவற்றில் நான் உங்களுக்கு உதவ முடியும்.",
+                modal_audio_error: "ஆடியோவை உருவாக்க முடியவில்லை.",
+                modal_tts_api_error: "குரல் உதவியாளருடன் இணைக்க முடியவில்லை. தயவுசெய்து மீண்டும் முயற்சிக்கவும்."
+            },
+            'te-IN': {
+                app_name: "కిసాన్ సారథి",
+                app_slogan: "ప్రతి రైతుకు సహాయక హస్తం.",
+                talk_to_assistant: "సహాయకుడితో మాట్లాడండి",
+                location_and_land_details_title: "స్థానం మరియు భూమి వివరాలు",
+                location_label: "స్థానం",
+                location_placeholder: "మీ నగరం లేదా గ్రామాన్ని నమోదు చేయండి",
+                land_size_label: "భూమి పరిమాణం (ఎకరాల్లో)",
+                land_size_placeholder: "ఉదా. 5",
+                get_recommendations_btn: "సిఫార్సులను పొందండి",
+                recommendations_and_alerts_title: "సిఫార్సులు మరియు హెచ్చరికలు",
+                crop_suggestions_title: "ఆదర్శ పంట సూచనలు:",
+                weather_climate_title: "వాతావరణం మరియు శీతోష్ణస్థితి:",
+                irrigation_pest_title: "నీటిపారుదల మరియు తెగులు నియంత్రణ:",
+                urgent_alerts_title: "అత్యవసర హెచ్చరికలు:",
+                ai_disease_detection_title: "AI పంట వ్యాధి గుర్తింపు",
+                upload_image_label: "మీ పంట చిత్రాన్ని అప్‌లోడ్ చేయండి",
+                analyze_image_btn: "చిత్రాన్ని విశ్లేషించండి",
+                yield_prediction_title: "ఆశించిన దిగుబడి అంచనా",
+                yield_prediction_info: "దిగుబడి అంచనా పొందడానికి మీ పంట, నేల రకం మరియు స్థానాన్ని నమోదు చేయండి.",
+                predict_yield_btn: "దిగుబడిని అంచనా వేయండి",
+                market_linkage_title: "మార్కెట్ అనుసంధానం",
+                market_linkage_info: "మీ పంటకు నిజ-సమయ ధరలను పొందండి. ధరలు కేవలం ఉదాహరణ కోసం మాత్రమే.",
+                commodity_table_header: "వస్తువు",
+                price_table_header: "ధర (ప్రతి క్వింటాల్)",
+                last_updated_table_header: "చివరిగా నవీకరించబడింది",
+                wheat_row: "గోధుమ",
+                rice_row: "బియ్యం (బాస్మతి)",
+                maize_row: "మొక్కజొన్న",
+                soybean_row: "సోయాబీన్",
+                loading: "లోడ్ అవుతోంది...",
+                modal_incomplete_info: "అసంపూర్ణ సమాచారం",
+                modal_enter_both: "దయచేసి మీ స్థానం మరియు భూమి పరిమాణం రెండింటినీ నమోదు చేయండి.",
+                modal_image_missing: "చిత్రం లేదు",
+                modal_upload_image: "విశ్లేషణ కోసం దయచేసి ఒక పంట చిత్రాన్ని అప్‌లోడ్ చేయండి.",
+                modal_analysis_loading: "చిత్రం విశ్లేషించబడుతోంది... దయచేసి వేచి ఉండండి.",
+                modal_analysis_error: "చిత్రాన్ని విశ్లేషించలేకపోయింది. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+                modal_api_error: "చిత్రాన్ని విశ్లేషించేటప్పుడు లోపం. దయచేసి మళ్ళీ ప్రయత్నించండి.",
+                modal_assistant_welcome: "కిసాన్ సారథికి స్వాగతం! నేను మీకు పంట సూచనలు, వాతావరణ సమాచారం మరియు మరిన్నింటిలో సహాయపడగలను.",
+                modal_audio_error: "ఆడియోను సృష్టించలేకపోయింది.",
+                modal_tts_api_error: "వాయిస్ అసిస్టెంట్‌తో కనెక్ట్ చేయడంలో విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి।"
+            },
+            'kn-IN': {
+                app_name: "ಕಿಸಾನ್ ಸಾರಥಿ",
+                app_slogan: "ಪ್ರತಿ ರೈತನಿಗೂ ಒಂದು ಸಹಾಯ ಹಸ್ತ.",
+                talk_to_assistant: "ಸಹಾಯಕನೊಂದಿಗೆ ಮಾತನಾಡಿ",
+                location_and_land_details_title: "ಸ್ಥಳ ಮತ್ತು ಭೂಮಿ ವಿವರಗಳು",
+                location_label: "ಸ್ಥಳ",
+                location_placeholder: "ನಿಮ್ಮ ನಗರ ಅಥವಾ ಹಳ್ಳಿಯನ್ನು ನಮೂದಿಸಿ",
+                land_size_label: "ಭೂಮಿ ಗಾತ್ರ (ಎಕರೆಗಳಲ್ಲಿ)",
+                land_size_placeholder: "ಉದಾ. 5",
+                get_recommendations_btn: "ಶಿಫಾರಸುಗಳನ್ನು ಪಡೆಯಿರಿ",
+                recommendations_and_alerts_title: "ಶಿಫಾರಸುಗಳು ಮತ್ತು ಎಚ್ಚರಿಕೆಗಳು",
+                crop_suggestions_title: "ಆದರ್ಶ ಬೆಳೆ ಸಲಹೆಗಳು:",
+                weather_climate_title: "ಹವಾಮಾನ ಮತ್ತು ಹವಾಮಾನ:",
+                irrigation_pest_title: "ನೀರಾವರಿ ಮತ್ತು ಕೀಟ ನಿಯಂತ್ರಣ:",
+                urgent_alerts_title: "ತುರ್ತು ಎಚ್ಚರಿಕೆಗಳು:",
+                ai_disease_detection_title: "AI ಬೆಳೆ ರೋಗ ಪತ್ತೆ",
+                upload_image_label: "ನಿಮ್ಮ ಬೆಳೆಯ ಚಿತ್ರವನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿ",
+                analyze_image_btn: "ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಿ",
+                yield_prediction_title: "ನಿರೀಕ್ಷಿತ ಇಳುವರಿ ಭವಿಷ್ಯ",
+                yield_prediction_info: "ಇಳುವರಿ ಭವಿಷ್ಯ ಪಡೆಯಲು ನಿಮ್ಮ ಬೆಳೆ, ಮಣ್ಣಿನ ಪ್ರಕಾರ ಮತ್ತು ಸ್ಥಳವನ್ನು ನಮೂದಿಸಿ.",
+                predict_yield_btn: "ಇಳುವರಿ ಭವಿಷ್ಯ ಮಾಡಿ",
+                market_linkage_title: "ಮಾರುಕಟ್ಟೆ ಸಂಪರ್ಕ",
+                market_linkage_info: "ನಿಮ್ಮ ಉತ್ಪನ್ನಗಳಿಗೆ ನೈಜ-ಸಮಯದ ಬೆಲೆಗಳನ್ನು ಪಡೆಯಿರಿ. ಬೆಲೆಗಳು ಕೇವಲ ಉದಾಹರಣೆಗೆ ಮಾತ್ರ.",
+                commodity_table_header: "ವಸ್ತು",
+                price_table_header: "ಬೆಲೆ (ಪ್ರತಿ ಕ್ವಿಂಟಾಲ್)",
+                last_updated_table_header: "ಕೊನೆಯ ನವೀಕರಣ",
+                wheat_row: "ಗೋಧಿ",
+                rice_row: "ಅಕ್ಕಿ (ಬಾಸುಮತಿ)",
+                maize_row: "ಮೆಕ್ಕೆಜೋಳ",
+                soybean_row: "ಸೋಯಾಬೀನ್",
+                loading: "ಲೋಡ್ ಆಗುತ್ತಿದೆ...",
+                modal_incomplete_info: "ಅಪೂರ್ಣ ಮಾಹಿತಿ",
+                modal_enter_both: "ದಯವಿಟ್ಟು ನಿಮ್ಮ ಸ್ಥಳ ಮತ್ತು ಭೂಮಿ ಗಾತ್ರ ಎರಡನ್ನೂ ನಮೂದಿಸಿ.",
+                modal_image_missing: "ಚಿತ್ರ ಕಾಣೆಯಾಗಿದೆ",
+                modal_upload_image: "ವಿಶ್ಲೇಷಣೆಗಾಗಿ ದಯವಿಟ್ಟು ಬೆಳೆಯ ಚಿತ್ರವನ್ನು ಅಪ್ಲೋಡ್ ಮಾಡಿ.",
+                modal_analysis_loading: "ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ... ದಯವಿಟ್ಟು ನಿರೀಕ್ಷಿಸಿ.",
+                modal_analysis_error: "ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+                modal_api_error: "ಚಿತ್ರವನ್ನು ವಿಶ್ಲೇಷಿಸುವಾಗ ದೋಷ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
+                modal_assistant_welcome: "ಕಿಸಾನ್ ಸಾರಥಿಗೆ ಸ್ವಾಗತ! ನಾನು ನಿಮಗೆ ಬೆಳೆ ಸಲಹೆಗಳು, ಹವಾಮಾನ ಮಾಹಿತಿ ಮತ್ತು ಇನ್ನೂ ಅನೇಕ ವಿಷಯಗಳಲ್ಲಿ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ.",
+                modal_audio_error: "ಆಡಿಯೊವನ್ನು ರಚಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ.",
+                modal_tts_api_error: "ಧ್ವನಿ ಸಹಾಯಕನೊಂದಿಗೆ ಸಂಪರ್ಕಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
+            },
+            'ml-IN': {
+                app_name: "കിസാൻ സാരഥി",
+                app_slogan: "ഓരോ കർഷകനും ഒരു സഹായഹസ്തം.",
+                talk_to_assistant: "അസിസ്റ്റന്റുമായി സംസാരിക്കുക",
+                location_and_land_details_title: "സ്ഥലവും ഭൂമിയുടെ വിവരങ്ങളും",
+                location_label: "സ്ഥലം",
+                location_placeholder: "നിങ്ങളുടെ നഗരമോ ഗ്രാമമോ നൽകുക",
+                land_size_label: "ഭൂമിയുടെ വലുപ്പം (ഏക്കറിൽ)",
+                land_size_placeholder: "ഉദാ. 5",
+                get_recommendations_btn: "നിർദ്ദേശങ്ങൾ നേടുക",
+                recommendations_and_alerts_title: "നിർദ്ദേശങ്ങളും അലേർട്ടുകളും",
+                crop_suggestions_title: "അനുയോജ്യമായ വിള നിർദ്ദേശങ്ങൾ:",
+                weather_climate_title: "കാലാവസ്ഥയും കാലാവസ്ഥയും:",
+                irrigation_pest_title: "ജലസേചനവും കീട നിയന്ത്രണവും:",
+                urgent_alerts_title: "അടിയന്തര അലേർട്ടുകൾ:",
+                ai_disease_detection_title: "എഐ വിള രോഗം കണ്ടെത്തൽ",
+                upload_image_label: "നിങ്ങളുടെ വിളയുടെ ചിത്രം അപ്‌ലോഡ് ചെയ്യുക",
+                analyze_image_btn: "ചിത്രം വിശകലനം ചെയ്യുക",
+                yield_prediction_title: "പ്രതീക്ഷിത വിളവ് പ്രവചനം",
+                yield_prediction_info: "വിളവ് പ്രവചനം ലഭിക്കുന്നതിന് നിങ്ങളുടെ വിള, മണ്ണിന്റെ തരം, സ്ഥലം എന്നിവ നൽകുക.",
+                predict_yield_btn: "വിളവ് പ്രവചിക്കുക",
+                market_linkage_title: "മാർക്കറ്റ് ലിങ്കേജ്",
+                market_linkage_info: "നിങ്ങളുടെ ഉൽപ്പന്നങ്ങൾക്ക് തത്സമയ വിലകൾ നേടുക. വിലകൾ ഉദാഹരണത്തിനായി മാത്രം.",
+                commodity_table_header: "വസ്തു",
+                price_table_header: "വില (ക്വിന്റലിന്)",
+                last_updated_table_header: "അവസാനം അപ്‌ഡേറ്റ് ചെയ്തത്",
+                wheat_row: "ഗോതമ്പ്",
+                rice_row: "അരി (ബസ്മതി)",
+                maize_row: "ചോളം",
+                soybean_row: "സോയാബീൻ",
+                loading: "ലോഡ് ചെയ്യുന്നു...",
+                modal_incomplete_info: "വിവരങ്ങൾ അപൂർണ്ണമാണ്",
+                modal_enter_both: "ദയവായി നിങ്ങളുടെ സ്ഥലവും ഭൂമിയുടെ വലുപ്പവും നൽകുക.",
+                modal_image_missing: "ചിത്രം കാണുന്നില്ല",
+                modal_upload_image: "വിശകലനത്തിനായി ഒരു വിള ചിത്രം അപ്‌ലോഡ് ചെയ്യുക.",
+                modal_analysis_loading: "ചിത്രം വിശകലനം ചെയ്യുന്നു... ദയവായി കാത്തിരിക്കുക.",
+                modal_analysis_error: "ചിത്രം വിശകലനം ചെയ്യാൻ കഴിഞ്ഞില്ല. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+                modal_api_error: "ചിത്രം വിശകലനം ചെയ്യുന്നതിൽ പിശക്. ദയവായി വീണ്ടും ശ്രമിക്കുക.",
+                modal_assistant_welcome: "കിസാൻ സാരഥിയിലേക്ക് സ്വാഗതം! വിള നിർദ്ദേശങ്ങൾ, കാലാവസ്ഥ വിവരങ്ങൾ, കൂടാതെ മറ്റു പലതിലും ഞാൻ നിങ്ങളെ സഹായിക്കാം.",
+                modal_audio_error: "ഓഡിയോ നിർമ്മിക്കാൻ കഴിഞ്ഞില്ല.",
+                modal_tts_api_error: "വോയിസ് അസിസ്റ്റന്റുമായി ബന്ധിപ്പിക്കുന്നതിൽ പരാജയപ്പെട്ടു. ദയവായി വീണ്ടും ശ്രമിക്കുക."
+            }
+        };
+
+        // Function to update all text based on selected language
+        function setLanguage(langCode) {
+            const currentLang = translations[langCode];
+            if (!currentLang) return;
+
+            // Translate all elements with data-translate attribute
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (currentLang[key]) {
+                    element.textContent = currentLang[key];
+                }
+            });
+
+            // Translate all elements with data-translate-placeholder attribute
+            document.querySelectorAll('[data-translate-placeholder]').forEach(element => {
+                const key = element.getAttribute('data-translate-placeholder');
+                if (currentLang[key]) {
+                    element.placeholder = currentLang[key];
+                }
+            });
+        }
+        
+        // Initial language set to English on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setLanguage(languageSelector.value);
+            
+            // Register service worker for offline functionality
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('service_worker.js')
+                        .then(registration => {
+                            console.log('Service Worker registered with scope:', registration.scope);
+                        })
+                        .catch(err => {
+                            console.log('Service Worker registration failed:', err);
+                        });
+                });
+            }
+        });
+
+        // Event listener for language selector
+        languageSelector.addEventListener('change', (event) => {
+            setLanguage(event.target.value);
+        });
+
+        // Helper function to show a custom modal message
+        function showModal(title, message) {
+            const langCode = languageSelector.value;
+            const currentLang = translations[langCode];
+            
+            document.getElementById('modal-title').textContent = currentLang[title] || title;
+            document.getElementById('modal-message').textContent = currentLang[message] || message;
+            document.getElementById('message-modal').style.display = 'flex';
+        }
+
+        // Feature 1 & 2: Get recommendations based on location and size
+        getRecommendationsBtn.addEventListener('click', () => {
+            const location = locationInput.value;
+            const landSize = landSizeInput.value;
+            const langCode = languageSelector.value;
+            const currentLang = translations[langCode];
+
+            if (!location || !landSize) {
+                showModal('modal_incomplete_info', 'modal_enter_both');
+                return;
+            }
+
+            // Show the recommendations section
+            recommendationsSection.classList.remove('hidden');
+
+            // Placeholder for live API calls
+            cropSuggestionsEl.textContent = `${currentLang.crop_suggestions_title.replace(':', '')} ${currentLang.wheat_row}, ${currentLang.rice_row}, ${currentLang.maize_row}`;
+            weatherInfoEl.textContent = `${currentLang.weather_climate_title.replace(':', '')} The current weather is sunny with a temperature of 32°C. Humidity is 65%.`;
+            irrigationPestEl.textContent = `${currentLang.irrigation_pest_title.replace(':', '')} Irrigation is recommended every 3 days. For pest control, consider neem oil spray.`;
+            alertsInfoEl.textContent = `${currentLang.urgent_alerts_title.replace(':', '')} No current alerts for drought, frost, or heatwave.`;
+        });
+
+        // Feature 4: AI Disease Detection
+        cropImageInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = "max-h-64 rounded-xl mt-4 mx-auto";
+                    imagePreviewEl.innerHTML = '';
+                    imagePreviewEl.appendChild(img);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        analyzeImageBtn.addEventListener('click', () => {
+            const file = cropImageInput.files[0];
+            const langCode = languageSelector.value;
+            const currentLang = translations[langCode];
+
+            if (!file) {
+                showModal('modal_image_missing', 'modal_upload_image');
+                return;
+            }
+
+            // Start analysis and show loading with a delay to simulate a real API call
+            diseaseAnalysisResultsEl.classList.remove('hidden');
+            diseaseResultEl.textContent = currentLang.modal_analysis_loading;
+
+            setTimeout(() => {
+                const analysisText = "Placeholder analysis: Signs of nutrient deficiency are visible on the leaves. Recommended action: Apply a nitrogen-rich fertilizer.";
+                diseaseResultEl.textContent = analysisText;
+            }, 1500);
+        });
+
+        // Feature 5: Yield Prediction
+        predictYieldBtn.addEventListener('click', () => {
+            const langCode = languageSelector.value;
+            const currentLang = translations[langCode];
+
+            yieldResultsEl.classList.remove('hidden');
+            // This would require a sophisticated model. For this app, we'll provide a simplified prediction.
+            const crop = currentLang.wheat_row; 
+            const predictedYield = Math.floor(Math.random() * 50) + 30; // Random number for demo
+            yieldResultEl.textContent = `Based on current conditions, the predicted yield for ${crop} is approximately ${predictedYield} quintals per acre.`;
+        });
+
+        // Feature 8: Voice Assistant (using Web Speech API)
+        voiceAssistantBtn.addEventListener('click', () => {
+            const langCode = languageSelector.value;
+            const currentLang = translations[langCode];
+            const welcomeText = currentLang.modal_assistant_welcome;
+            
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(welcomeText);
+                utterance.lang = langCode;
+                speechSynthesis.speak(utterance);
+            } else {
+                showModal('modal_audio_error', 'Your browser does not support the Web Speech API.');
+            }
+        });
+    </script>
+</body>
+</html>
